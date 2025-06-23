@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="AI-Powered-Crypto-News-Summarizer" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="CryptoWhitePaperRAG" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="cryptoRAG" project-jdk-type="Python SDK" />
 </project>

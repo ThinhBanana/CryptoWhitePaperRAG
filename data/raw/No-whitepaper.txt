@@ -1,1 +1,3 @@
-../No-whitepaper.txt
+version https://git-lfs.github.com/spec/v1
+oid sha256:b023304f4ea5bb32d4986e9b937b17f6f95305e9b2f3b925338dd5891c8f095a
+size 20

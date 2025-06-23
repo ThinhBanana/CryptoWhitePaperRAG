@@ -1,1 +1,3 @@
-../../Bitcoin/References/bmoney.txt
+version https://git-lfs.github.com/spec/v1
+oid sha256:ed297ba54936210e0800cda7de0182fd8ea0c90946292fa93a3f1faea59139e9
+size 35

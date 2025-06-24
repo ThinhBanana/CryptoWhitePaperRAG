@@ -7,7 +7,7 @@ from chromadb.config import Settings
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
 
-def create_embed_db(file_path: str):
+def create_embed_db(file_path: str, collection_name: str = 'crypto_docs') -> chromadb.Collection:
     # Load chunked data
     with open(file_path, "r") as f:
         text_chunks = json.load(f)
@@ -26,7 +26,7 @@ def create_embed_db(file_path: str):
 
     # Get or create db
     embedding_func = SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
-    collection = client.get_or_create_collection("crypto_docs", embedding_function=embedding_func)
+    collection = client.get_or_create_collection(collection_name, embedding_function=embedding_func)
 
     # Check is created then return
     if collection.count() > 0:
@@ -40,7 +40,6 @@ def create_embed_db(file_path: str):
 
     count = 0
     for chunk in text_chunks:
-
         filename = chunk.get('filename', 'N/a')
         chunk_id = chunk.get('chunk_id', '0')
         text = chunk.get('text', 'N/a')
@@ -76,7 +75,7 @@ def create_embed_db(file_path: str):
     return collection
 
 
-def search(collection, query: str, top_k: int = 3) -> typing.List[typing.Dict]:
+def retrieve_context(collection, query: str, top_k: int = 3) -> typing.List[str]:
     results = collection.query(
         query_texts=query,
         n_results=top_k,
@@ -84,7 +83,6 @@ def search(collection, query: str, top_k: int = 3) -> typing.List[typing.Dict]:
 
     return results
 
-
 chroma = create_embed_db("../data/processed_chunks/chunks.json")
-result = search(chroma, "What is the role of 0x in decentralized trading?")
+result = retrieve_context(chroma, "What is the role of 0x in decentralized trading?")
 print(result)

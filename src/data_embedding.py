@@ -1,7 +1,10 @@
 import json
+import os
 import typing
 import chromadb
-from sentence_transformers import SentenceTransformer
+from chromadb import PersistentClient
+from chromadb.config import Settings
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
 
 def create_embed_db(file_path: str):
@@ -9,19 +12,21 @@ def create_embed_db(file_path: str):
     with open(file_path, "r") as f:
         text_chunks = json.load(f)
 
-    # Initiate embedding model
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-
     # Initiate chromadb
-    client = chromadb.Client(
-        chromadb.config.Settings(
-            persist_directory="../db/chroma_store",  # or any folder you want
-            anonymized_telemetry=False
-        )
+    # Runtime version - Reembedding when restart
+    # client = chromadb.Client(settings=Settings(anonymized_telemetry=False))
+
+    # Save to local version
+    client = PersistentClient(
+        path="../db/chroma_store/",
+        settings=Settings(anonymized_telemetry=False)
     )
 
+    os.makedirs("../db/chroma_store", exist_ok=True)
+
     # Get or create db
-    collection = client.get_or_create_collection("crypto_docs", embedding_function=None)
+    embedding_func = SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+    collection = client.get_or_create_collection("crypto_docs", embedding_function=embedding_func)
 
     # Check is created then return
     if collection.count() > 0:
@@ -32,7 +37,6 @@ def create_embed_db(file_path: str):
     ids = []
     documents = []
     metadatas = []
-    embeddings = []
 
     count = 0
     for chunk in text_chunks:
@@ -47,7 +51,6 @@ def create_embed_db(file_path: str):
             "filename": filename,
             "chunk_id": chunk_id,
         })
-        embeddings.append(model.encode(text))
 
         count += 1
         print(f'Process Embedding: {count} / {len(text_chunks)}')
@@ -60,15 +63,15 @@ def create_embed_db(file_path: str):
         batch_ids = ids[i:i + BATCH_SIZE]
         batch_docs = documents[i:i + BATCH_SIZE]
         batch_metas = metadatas[i:i + BATCH_SIZE]
-        batch_embeds = embeddings[i:i + BATCH_SIZE]
 
         collection.add(
             ids=batch_ids,
             documents=batch_docs,
             metadatas=batch_metas,
-            embeddings=batch_embeds,
         )
         print(f"Adding batch {i} to {i + len(batch_ids)} / {total_ids}")
+
+    print("Chroma DB persisted to disk.")
 
     return collection
 
@@ -83,4 +86,5 @@ def search(collection, query: str, top_k: int = 3) -> typing.List[typing.Dict]:
 
 
 chroma = create_embed_db("../data/processed_chunks/chunks.json")
-search(chroma, "What is the role of 0x in decentralized trading?")
+result = search(chroma, "What is the role of 0x in decentralized trading?")
+print(result)
